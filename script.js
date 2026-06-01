@@ -373,3 +373,41 @@ document.getElementById("clear").addEventListener("click", () => {
 document.getElementById("print").addEventListener("click", () => {
   window.print();
 });
+
+
+// خطوط انتهای فایل script.js جهت ست کردن مقدار اولیه سال ۱۴۰۵ در آغاز برنامه:
+window.addEventListener('DOMContentLoaded', () => {
+  const currentYear = yearSelectEl.value;
+  if (baseAmounts[currentYear] && perPercentEl) {
+    perPercentEl.value = baseAmounts[currentYear];
+  }
+});
+
+// اصلاح بخش نمایش نتیجه (برای خروج از حالت پنهان)
+document.getElementById("calc").addEventListener("click", () => {
+  const year = yearSelectEl.value;
+  if (!baseAmounts[year]) return alert("لطفاً سال را انتخاب کنید");
+
+  const per = baseAmounts[year]; 
+  const forensicRows = [...listEl.children];
+  const arshRows = [...document.getElementById("arshList").children];
+  let totalPercent = 0;
+
+  forensicRows.forEach(r => {
+    const percent = parseFloat(r.dataset.percent) || 0;
+    const count = parseFloat(r.dataset.count) || 1;
+    totalPercent += percent * count;
+  });
+
+  arshRows.forEach(r => totalPercent += parseFloat(r.dataset.percent) || 0);
+
+  const totalAmount = totalPercent * per;
+  const totalAmountFmt = totalAmount.toLocaleString('fa-IR');
+
+  const resultDiv = document.getElementById("result");
+  resultDiv.style.display = "block";
+  resultDiv.innerHTML = `
+    <div><strong>سال انتخاب شده:</strong> ${year}<br>
+    <strong>درصد کل:</strong> ${totalPercent.toFixed(2)}%<br>
+    <strong>مبلغ کل:</strong> ${totalAmountFmt} ریال</div>`;
+});
