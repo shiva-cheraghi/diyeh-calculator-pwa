@@ -1,7 +1,7 @@
 {
   "name": "محاسبه گر دیه و ارش",
   "short_name": "محاسبه گر دیه",
-  "start_url": "./index.html",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#2563eb",
