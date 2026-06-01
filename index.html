@@ -1,22 +1,15 @@
 <!DOCTYPE html>
-
 <html lang="fa" dir="rtl">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <title>محاسبه گر دیه و ارش</title>
-
   <link rel="stylesheet" href="style.css">
   <link rel="manifest" href="manifest.json">
-
   <meta name="theme-color" content="#2563eb">
   <meta name="description" content="محاسبه گر دیه و ارش پزشکی قانونی">
-
   <link rel="apple-touch-icon" href="icon-192.png">
 </head>
-
 <body>
 
 <div class="app">
@@ -33,12 +26,12 @@
         <option value="1405" selected>۱۴۰۵ — 210,000,000 ریال</option>
       </select>
     </label>
+    <input type="hidden" id="perPercentForensic" value="210000000">
+  </div>
 
-```
-<div class="card fade-in">
-  <h3>موارد پزشکی‌قانونی</h3>
-
-  <div class="form-grid">
+  <div class="card fade-in">
+    <h3>موارد پزشکی‌قانونی</h3>
+    <div class="form-grid">
     <label>عضو:
       <select id="member">
         <option value="">انتخاب کنید</option>
@@ -72,73 +65,87 @@
         <option value="فوت">فوت</option>
       </select>
     </label>
+      <label>نوع آسیب:
+        <select id="subMember">
+          <option value="">ابتدا عضو را انتخاب کنید</option>
+        </select>
+      </label>
 
-    <label>نوع آسیب:
-      <select id="subMember">
-        <option value="">ابتدا عضو را انتخاب کنید</option>
-      </select>
-    </label>
+      <label>تعداد:
+        <input class="count" type="number" value="1" min="1">
+      </label>
 
-    <label>تعداد:
-      <input class="count" type="number" value="1" min="1">
-    </label>
+      <label>نسبت آسیب (بین 0 تا 1):
+        <input class="fraction" type="number" step="0.01" min="0" max="1" value="1">
+      </label>
 
-    <label>نسبت آسیب (بین 0 تا 1):
-      <input class="fraction" type="number" step="0.01" min="0" max="1" value="1">
-    </label>
-
-    <button id="add" class="primary">افزودن</button>
+      <button id="add" class="primary">افزودن</button>
+    </div>
+    <div class="list" id="membersForensic"></div>
   </div>
 
-  <div class="list" id="membersForensic"></div>
-</div>
-
-<div class="card fade-in">
-  <h3>موارد ارش</h3>
-
-  <div class="form-grid">
-    <label>شرح آسیب:
-      <input id="arshTitle" type="text" placeholder="نوع جراحت ارش">
-    </label>
-
-    <label>درصد ارش (%):
-      <input id="arshPercent" type="number" step="0.01" placeholder="مثلاً 1.5">
-    </label>
-
-    <button id="addArsh" class="primary">افزودن ارش</button>
+  <div class="card fade-in">
+    <h3>موارد ارش</h3>
+    <div class="form-grid">
+      <label>شرح آسیب:
+        <input id="arshTitle" type="text" placeholder="نوع جراحت ارش">
+      </label>
+      <label>درصد ارش (%):
+        <input id="arshPercent" type="number" step="0.01" placeholder="مثلاً 1.5">
+      </label>
+      <button id="addArsh" class="primary">افزودن ارش</button>
+    </div>
+    <div class="list" id="arshList"></div>
   </div>
 
-  <div class="list" id="arshList"></div>
-</div>
-
-<div class="row actions">
-  <button id="calc" class="success">محاسبه نهایی</button>
-  <button id="clear" class="danger">پاک کردن همه</button>
-  <button id="print" class="primary">پرینت</button>
-</div>
-
-<div id="result" class="result fade-in"></div>
-```
-
+  <div class="row actions" style="margin-top: 20px; display: flex; gap: 10px;">
+    <button id="calc" class="success">محاسبه نهایی</button>
+    <button id="clear" class="danger">پاک کردن همه</button>
+    <button id="print" class="primary">پرینت</button>
   </div>
+
+  <div id="result" class="result fade-in" style="display: none;"></div>
+  
+  <button id="installApp" class="primary" style="display: none; margin-top: 20px; width: 100%; background: #1e40af;">نصب اپلیکیشن روی دسکتاپ / موبایل</button>
 </div>
 
 <script src="script.js"></script>
 
 <script>
+let deferredPrompt;
+const installBtn = document.getElementById('installApp');
+
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker
-      .register("./service-worker.js")
-      .then(() => {
-        console.log("PWA Ready");
-      })
-      .catch(err => {
-        console.log(err);
-      });
+    navigator.serviceWorker.register("./service-worker.js")
+      .then(() => console.log("PWA Ready"))
+      .catch(err => console.log("SW Error:", err));
+  });
+}
+
+// گوش دادن به رویداد آمادگی نصب مرورگر
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // نمایش دکمه نصب اختصاصی در صفحه
+  if(installBtn) installBtn.style.display = 'block';
+});
+
+if(installBtn) {
+  installBtn.addEventListener('click', async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        installBtn.style.display = 'none';
+      }
+      deferredPrompt = null;
+    }
   });
 }
 </script>
-
 </body>
 </html>
+
+
+
